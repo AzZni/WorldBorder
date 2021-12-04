@@ -179,8 +179,6 @@ public class WorldFillTask implements Runnable
 		if (continueNotice)
 		{	// notify user that task has continued automatically
 			continueNotice = false;
-			sendMessage("World map generation task automatically continuing.");
-			sendMessage("Reminder: you can cancel at any time with \"wb fill cancel\", or pause/unpause with \"wb fill pause\".");
 		}
 
 		if (pausedForMemory)
@@ -190,7 +188,6 @@ public class WorldFillTask implements Runnable
 
 			pausedForMemory = false;
 			readyToGo = true;
-			sendMessage("Available memory is sufficient, automatically continuing.");
 		}
 
 		if (server == null || !readyToGo || paused)
@@ -418,7 +415,7 @@ public class WorldFillTask implements Runnable
 		reportProgress();
 		world.save();
 		Bukkit.getServer().getPluginManager().callEvent(new WorldBorderFillFinishedEvent(world, reportTotal));
-		sendMessage("task successfully completed for world \"" + refWorld() + "\"!");
+		sendMessage("Prégénération du monde terminée !");
 		this.stop();
 	}
 
@@ -511,7 +508,7 @@ public class WorldFillTask implements Runnable
 		lastReport = Config.Now();
 		double perc = getPercentageCompleted();
 		if (perc > 100) perc = 100;
-		sendMessage(reportNum + " more chunks processed (" + (reportTotal + reportNum) + " total, ~" + Config.coord.format(perc) + "%" + ")");
+		sendMessage(" Tâche en cours... (" + Config.coord.format(perc) + "%" + ")");
 		reportTotal += reportNum;
 		reportNum = 0;
 
@@ -519,7 +516,6 @@ public class WorldFillTask implements Runnable
 		if (Config.FillAutosaveFrequency() > 0 && lastAutosave + (Config.FillAutosaveFrequency() * 1000) < lastReport)
 		{
 			lastAutosave = lastReport;
-			sendMessage("Saving the world to disk, just to be on the safe side.");
 			world.save();
 		}
 	}
@@ -530,18 +526,18 @@ public class WorldFillTask implements Runnable
 		// Due to chunk generation eating up memory and Java being too slow about GC, we need to track memory availability
 		int availMem = Config.AvailableMemory();
 
-		Config.log("[Fill] " + text + " (free mem: " + availMem + " MB)");
+		Config.log("Pregen | " + text + " (free mem: " + availMem + " MB)");
 		if (notifyPlayer != null)
-			notifyPlayer.sendMessage("[Fill] " + text);
+			notifyPlayer.sendMessage("Pregen | " + text);
 
 		if (availMem < 200)
 		{	// running low on memory, auto-pause
 			pausedForMemory = true;
 			Config.StoreFillTask();
 			text = "Available memory is very low, task is pausing. A cleanup will be attempted now, and the task will automatically continue if/when sufficient memory is freed up.\n Alternatively, if you restart the server, this task will automatically continue once the server is back up.";
-			Config.log("[Fill] " + text);
+			Config.log("Pregen | " + text);
 			if (notifyPlayer != null)
-				notifyPlayer.sendMessage("[Fill] " + text);
+				notifyPlayer.sendMessage("Pregen | " + text);
 			// prod Java with a request to go ahead and do GC to clean unloaded chunks from memory; this seems to work wonders almost immediately
 			// yes, explicit calls to System.gc() are normally bad, but in this case it otherwise can take a long long long time for Java to recover memory
 			System.gc();
